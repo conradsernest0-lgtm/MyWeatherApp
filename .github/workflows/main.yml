@@ -1,0 +1,42 @@
+
+name: MyWeather APK bauen
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Quellcode herunterladen
+        uses: actions/checkout@v4
+
+      - name: Java installieren
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android SDK installieren
+        uses: android-actions/setup-android@v3
+
+      - name: Gradle installieren
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: APK bauen
+        run: gradle assembleDebug
+
+      - name: APK zum Download bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyWeather-APK
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
