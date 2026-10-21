@@ -24,8 +24,11 @@ jobs:
 
       - name: Android SDK installieren
         uses: android-actions/setup-android@v3
+        env:
+          SKIP_JDK_VERSION_CHECK: true
         with:
           packages: 'platform-tools'
+
 
       - name: Gradle installieren
         uses: gradle/actions/setup-gradle@v4
