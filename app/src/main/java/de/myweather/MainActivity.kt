@@ -1,4 +1,5 @@
 package de.myweather
+
 import kotlin.math.roundToInt
 import android.Manifest
 import android.content.Context
@@ -234,12 +235,127 @@ suspend fun ensembleForecast(lat: Double, lon: Double, selected: Set<Provider>, 
     })
 }
 
-@Composable fun AlertsScreen(modifier: Modifier, alerts: List<WeatherAlert>, tornado: Boolean) { LazyColumn(modifier.fillMaxSize().background(Color(0xFF003D58)), contentPadding=PaddingValues(16.dp)) { item { Text("Warnungen",fontSize=26.sp,fontWeight=FontWeight.Bold); Spacer(Modifier.height(10.dp)) }; if(tornado) item { Card(colors=CardDefaults.cardColors(containerColor=Color(0xFF8B3D12)),modifier=Modifier.fillMaxWidth()){Column(Modifier.padding(14.dp)){Text("Tornadobildung möglich",fontWeight=FontWeight.Bold,fontSize=18.sp);Text("Nicht amtliche warnung",fontSize=12.sp,color=Color(0xFFFFCC80));Text("Ermittelt aus DWD-Mesocyclone-Detection-Daten.")}};Spacer(Modifier.height(10.dp))}; if(alerts.isEmpty()) item{Text("Keine aktuellen DWD-Warnungen im Feed gefunden.")} ; items(alerts){a->Card(Modifier.fillMaxWidth().padding(bottom=8.dp),colors=CardDefaults.cardColors(containerColor=Color(0xFF06415C))){Column(Modifier.padding(14.dp)){Text("⚠ ${a.event}",fontWeight=FontWeight.Bold);Text(a.description);Text("Amtliche Warnung · DWD",fontSize=12.sp,color=Color(0xFFB8E4FF))}}} } }
+@Composable fun AlertsScreen(modifier: Modifier, alerts: List<WeatherAlert>, tornado: Boolean) { 
+    LazyColumn(modifier.fillMaxSize().background(Color(0xFF003D58)), contentPadding=PaddingValues(16.dp)) { 
+        item { Text("Warnungen",fontSize=26.sp,fontWeight=FontWeight.Bold); Spacer(Modifier.height(10.dp)) }
+        if(tornado) item { Card(colors=CardDefaults.cardColors(containerColor=Color(0xFF8B3D12)),modifier=Modifier.fillMaxWidth()){Column(Modifier.padding(14.dp)){Text("Tornadobildung möglich",fontWeight=FontWeight.Bold,fontSize=18.sp);Text("Nicht amtliche warnung",fontSize=12.sp,color=Color(0xFFFFCC80));Text("Ermittelt aus DWD-Mesocyclone-Detection-Daten.")}};Spacer(Modifier.height(10.dp))}
+        if(alerts.isEmpty()) item{Text("Keine aktuellen DWD-Warnungen im Feed gefunden.")}
+        items(alerts){a->Card(Modifier.fillMaxWidth().padding(bottom=8.dp),colors=CardDefaults.cardColors(containerColor=Color(0xFF06415C))){Column(Modifier.padding(14.dp)){Text("⚠ ${a.event}",fontWeight=FontWeight.Bold);Text(a.description);Text("Amtliche Warnung · DWD",fontSize=12.sp,color=Color(0xFFB8E4FF))}}} 
+    } 
+}
 
-@Composable fun SettingsScreen(modifier: Modifier, provider: Provider, onProvider:(Provider)->Unit, enabled:Set<Provider>, onEnabled:(Set<Provider>)->Unit, weights:Map<Provider,Int>, onWeights:(Map<Provider,Int>)->Unit, tornado:Boolean,setTornado:(Boolean)->Unit,frost:Boolean,setFrost:(Boolean)->Unit,ice:Boolean,setIce:(Boolean)->Unit,storm:Boolean,setStorm:(Boolean)->Unit,wind:Boolean,setWind:(Boolean)->Unit,bg:Color,setBg:(Color)->Unit) {
-    LazyColumn(modifier.fillMaxSize().background(bg),contentPadding=PaddingValues(16.dp)){
-        item{Text("Einstellungen",fontSize=26.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.height(12.dp));Text("Vorhersagequelle",fontSize=19.sp,fontWeight=FontWeight.SemiBold);Provider.values().forEach{p->if(p==Provider.MIX||p in enabled){Row(Modifier.fillMaxWidth().clickable{onProvider(p)}.padding(vertical=6.dp),verticalAlignment=Alignment.CenterVertically){RadioButton(p==provider,{onProvider(p)});Text(p.label)}}};Spacer(Modifier.height(8.dp));Text("Modelle im Mischmodus",fontWeight=FontWeight.SemiBold);Provider.values().filter{it!=Provider.MIX}.forEach{p->Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){Checkbox(p in enabled,{v->onEnabled(if(v)enabled+p else enabled-p)});Text(p.label);Spacer(Modifier.weight(1f));Text("${weights[p]?:5}%")}};Spacer(Modifier.height(8.dp));Text("Gewichtung (jedes aktive Modell mindestens 5 %)",fontWeight=FontWeight.SemiBold);Provider.values().filter{it!=Provider.MIX}.forEach{p->if(p in enabled){Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text(p.label);Text("${weights[p]?:5}%")};Slider(value=(weights[p]?:5).toFloat(),onValueChange={onWeights(weights+(p to it.toInt().coerceIn(5,70)))},valueRange=5f..70f,steps=64)}};Divider(Modifier.padding(vertical=12.dp));Text("Warnungen",fontSize=19.sp,fontWeight=FontWeight.SemiBold);ToggleRow("Tornado – nicht amtlich",tornado,setTornado);ToggleRow("Frost",frost,setFrost);ToggleRow("Glätte",ice,setIce);ToggleRow("Gewitter",storm,setStorm);ToggleRow("Sturm / Wind",wind,setWind);Divider(Modifier.padding(vertical=12.dp));Text("Design",fontSize=19.sp,fontWeight=FontWeight.SemiBold);Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){listOf(Color(0xFF064766),Color(0xFF1C2733),Color(0xFF244D2C),Color(0xFF4B274E),Color(0xFF263238)).forEach{c->Box(Modifier.size(42.dp).clip(RoundedCornerShape(10.dp)).background(c).clickable{setBg(c)})}};Spacer(Modifier.height(12.dp));Text("DWD-Warnungen und die nicht amtliche Rotationswarnung werden im Hintergrund regelmäßig geprüft und als Benachrichtigung ausgegeben.",fontSize=12.sp,color=Color.LightGray)}
+@Composable fun SettingsScreen(
+    modifier: Modifier, 
+    provider: Provider, 
+    onProvider:(Provider)->Unit, 
+    enabled:Set<Provider>, 
+    onEnabled:(Set<Provider>)->Unit, 
+    weights:Map<Provider,Int>, 
+    onWeights:(Map<Provider,Int>)->Unit, 
+    tornado:Boolean, 
+    setTornado:(Boolean)->Unit, 
+    frost:Boolean, 
+    setFrost:(Boolean)->Unit, 
+    ice:Boolean, 
+    setIce:(Boolean)->Unit, 
+    storm:Boolean, 
+    setStorm:(Boolean)->Unit, 
+    wind:Boolean, 
+    setWind:(Boolean)->Unit, 
+    bg:Color, 
+    setBg:(Color)->Unit
+) {
+    LazyColumn(modifier = modifier.fillMaxSize().background(bg), contentPadding = PaddingValues(16.dp)) {
+        item {
+            Text("Einstellungen", fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(12.dp))
+            Text("Vorhersagequelle", fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
+        }
+        items(Provider.values().filter { it != Provider.MIX }) { p ->
+            if (p in enabled) {
+                Row(
+                    Modifier.fillMaxWidth().clickable { onProvider(p) }.padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(p == provider, { onProvider(p) })
+                    Spacer(Modifier.width(8.dp))
+                    Text(p.label)
+                }
+            }
+        }
+        item {
+            Spacer(Modifier.height(8.dp))
+            Text("Modelle im Mischmodus", fontWeight = FontWeight.SemiBold)
+        }
+        items(Provider.values().filter { it != Provider.MIX }) { p ->
+            Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(p in enabled, { v -> onEnabled(if (v) enabled + p else enabled - p) })
+                Spacer(Modifier.width(8.dp))
+                Text(p.label)
+                Spacer(Modifier.weight(1f))
+                Text("${weights[p] ?: 5}%")
+            }
+        }
+        item {
+            Spacer(Modifier.height(8.dp))
+            Text("Gewichtung (jedes aktive Modell mindestens 5 %)", fontWeight = FontWeight.SemiBold)
+        }
+        items(Provider.values().filter { it != Provider.MIX && it in enabled }) { p ->
+            Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(p.label)
+                    Text("${weights[p] ?: 5}%")
+                }
+                Slider(
+                    value = (weights[p] ?: 5).toFloat(),
+                    onValueChange = { onWeights(weights + (p to it.toInt().coerceIn(5, 70))) },
+                    valueRange = 5f..70f,
+                    steps = 64
+                )
+            }
+        }
+        item {
+            Divider(Modifier.padding(vertical = 12.dp))
+            Text("Warnungen", fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
+        }
+        item { ToggleRow("Tornado – nicht amtlich", tornado, setTornado) }
+        item { ToggleRow("Frost", frost, setFrost) }
+        item { ToggleRow("Glätte", ice, setIce) }
+        item { ToggleRow("Gewitter", storm, setStorm) }
+        item { ToggleRow("Sturm / Wind", wind, setWind) }
+        item {
+            Divider(Modifier.padding(vertical = 12.dp))
+            Text("Design", fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf(
+                    Color(0xFF064766),
+                    Color(0xFF1C2733),
+                    Color(0xFF244D2C),
+                    Color(0xFF4B274E),
+                    Color(0xFF263238)
+                ).forEach { c ->
+                    Box(
+                        Modifier.size(42.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(c)
+                            .clickable { setBg(c) }
+                    )
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "DWD-Warnungen und die nicht amtliche Rotationswarnung werden im Hintergrund regelmäßig geprüft und als Benachrichtigung ausgegeben.",
+                fontSize = 12.sp,
+                color = Color.LightGray
+            )
+        }
     }
 }
 
-@Composable fun ToggleRow(label:String,checked:Boolean,onChecked:(Boolean)->Unit){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween){Text(label);Switch(checked,onChecked)}}
+@Composable fun ToggleRow(label: String, checked: Boolean, onChecked: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label)
+        Switch(checked, onChecked)
+    }
+}
