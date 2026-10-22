@@ -98,7 +98,7 @@ object WeatherEngine {
     fun dwdMesoLatest(): List<Pair<Double, Double>> {
         val raw = get("https://opendata.dwd.de/weather/radar/mesocyclones/meso_latest.xml")
         val points = mutableListOf<Pair<Double, Double>>()
-        val regex = Regex("lat(?:itude)?=\\"([0-9.+-]+)\\"[^>]*lon(?:gitude)?=\\"([0-9.+-]+)\\"", RegexOption.IGNORE_CASE)
+        val regex = Regex("""lat(?:itude)?="([0-9.+-]+)"[^>]*lon(?:gitude)?="([0-9.+-]+)"""", RegexOption.IGNORE_CASE)
         regex.findAll(raw).forEach { m -> points += m.groupValues[1].toDouble() to m.groupValues[2].toDouble() }
         if (points.isEmpty()) {
             Regex("<lat>\\s*([0-9.+-]+)\\s*</lat>.*?<lon>\\s*([0-9.+-]+)\\s*</lon>", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
