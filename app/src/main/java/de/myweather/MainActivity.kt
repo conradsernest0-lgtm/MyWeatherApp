@@ -301,18 +301,8 @@ suspend fun ensembleForecast(lat: Double, lon: Double, selected: Set<Provider>, 
             Text("Gewichtung (jedes aktive Modell mindestens 5 %)", fontWeight = FontWeight.SemiBold)
         }
         items(Provider.values().filter { it != Provider.MIX && it in enabled }) { p ->
-            Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(p.label)
-                    Text("${weights[p] ?: 5}%")
-                }
-                Slider(
-                    value = (weights[p] ?: 5).toFloat(),
-                    onValueChange = { onWeights(weights + (p to it.toInt().coerceIn(5, 70))) },
-                    valueRange = 5f..70f,
-                    steps = 64
-                )
-            }
+            val currentWeight = weights[p] ?: 5
+            itemContentProviderPlaceholder(p, currentWeight, weights, onWeights)
         }
         item {
             Divider(Modifier.padding(vertical = 12.dp))
@@ -350,6 +340,24 @@ suspend fun ensembleForecast(lat: Double, lon: Double, selected: Set<Provider>, 
                 color = Color.LightGray
             )
         }
+    }
+}
+
+@Composable
+fun itemContentProviderPlaceholder(p: Provider, currentWeight: Int, weights: Map<Provider, Int>, onWeights: (Map<Provider, Int>) -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(p.label)
+            Text("$currentWeight%")
+        }
+        Slider(
+            value = currentWeight.toFloat(),
+            onValueChange = { newWeight ->
+                onWeights(weights + (p to newWeight.toInt().coerceIn(5, 70)))
+            },
+            valueRange = 5f..70f,
+            steps = 64
+        )
     }
 }
 
