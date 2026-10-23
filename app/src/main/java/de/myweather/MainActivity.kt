@@ -265,13 +265,15 @@ suspend fun ensembleForecast(lat: Double, lon: Double, selected: Set<Provider>, 
     bg:Color, 
     setBg:(Color)->Unit
 ) {
+    val providersWithoutMix = remember { Provider.values().filter { it != Provider.MIX } }
+
     LazyColumn(modifier = modifier.fillMaxSize().background(bg), contentPadding = PaddingValues(16.dp)) {
         item {
             Text("Einstellungen", fontSize = 26.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(12.dp))
             Text("Vorhersagequelle", fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
         }
-        items(Provider.values().filter { it != Provider.MIX }) { p ->
+        items(providersWithoutMix) { p ->
             if (p in enabled) {
                 Row(
                     Modifier.fillMaxWidth().clickable { onProvider(p) }.padding(vertical = 6.dp),
@@ -287,7 +289,7 @@ suspend fun ensembleForecast(lat: Double, lon: Double, selected: Set<Provider>, 
             Spacer(Modifier.height(8.dp))
             Text("Modelle im Mischmodus", fontWeight = FontWeight.SemiBold)
         }
-        items(Provider.values().filter { it != Provider.MIX }) { p ->
+        items(providersWithoutMix) { p ->
             Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(p in enabled, { v -> onEnabled(if (v) enabled + p else enabled - p) })
                 Spacer(Modifier.width(8.dp))
@@ -300,9 +302,24 @@ suspend fun ensembleForecast(lat: Double, lon: Double, selected: Set<Provider>, 
             Spacer(Modifier.height(8.dp))
             Text("Gewichtung (jedes aktive Modell mindestens 5 %)", fontWeight = FontWeight.SemiBold)
         }
-        items(Provider.values().filter { it != Provider.MIX && it in enabled }) { p ->
-            val currentWeight = weights[p] ?: 5
-            itemContentProviderPlaceholder(p, currentWeight, weights, onWeights)
+        items(providersWithoutMix) { p ->
+            if (p in enabled) {
+                val currentWeight = weights[p] ?: 5
+                Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(p.label)
+                        Text("$currentWeight%")
+                    }
+                    Slider(
+                        value = currentWeight.toFloat(),
+                        onValueChange = { newWeight ->
+                            onWeights(weights + (p to newWeight.toInt().coerceIn(5, 70)))
+                        },
+                        valueRange = 5f..70f,
+                        steps = 64
+                    )
+                }
+            }
         }
         item {
             Divider(Modifier.padding(vertical = 12.dp))
@@ -340,24 +357,6 @@ suspend fun ensembleForecast(lat: Double, lon: Double, selected: Set<Provider>, 
                 color = Color.LightGray
             )
         }
-    }
-}
-
-@Composable
-fun itemContentProviderPlaceholder(p: Provider, currentWeight: Int, weights: Map<Provider, Int>, onWeights: (Map<Provider, Int>) -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(p.label)
-            Text("$currentWeight%")
-        }
-        Slider(
-            value = currentWeight.toFloat(),
-            onValueChange = { newWeight ->
-                onWeights(weights + (p to newWeight.toInt().coerceIn(5, 70)))
-            },
-            valueRange = 5f..70f,
-            steps = 64
-        )
     }
 }
 
